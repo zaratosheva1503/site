@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MATRIX - Gaming Computers</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="matrix-background"></div>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <h1><a href="#" data-lang="en">MATRIX</a></h1>
+            </div>
+            <nav>
+                <ul class="language-switcher">
+                    <li><button onclick="switchLanguage('en')" class="active">EN</button></li>
+                    <li><button onclick="switchLanguage('ru')">RU</button></li>
+                    <li><button onclick="switchLanguage('uz')">UZ</button></li>
+                </ul>
+            </nav>
+        </header>
+
+        <main>
+            <section id="home">
+                <h2 data-lang-key="main_title">MATRIX — Building and Repairing Gaming Computers</h2>
+                <p data-lang-key="company_description">We are a team of dedicated professionals specializing in high-performance gaming PCs. Our sole focus is on gaming computers, and we do not service phones or tablets.</p>
+            </section>
+
+            <section id="services">
+                <h3 data-lang-key="services_title">Our Services</h3>
+                <ul>
+                    <li data-lang-key="service_1">Custom PC Builds</li>
+                    <li data-lang-key="service_2">Repair and Diagnostics</li>
+                    <li data-lang_key="service_3">Software/Game Installation</li>
+                </ul>
+            </section>
+
+            <section id="reviews">
+                <h3 data-lang-key="reviews_title">Reviews</h3>
+                <div class="review-list">
+                    <!-- Reviews will be added here dynamically -->
+                </div>
+                <button id="add-review-btn" data-lang-key="add_review_btn">Add a Review</button>
+            </section>
+        </main>
+
+        <footer>
+            <h3 data-lang-key="contact_title">Contact Us</h3>
+            <p>+998912445888</p>
+            <p>+998982745888</p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
