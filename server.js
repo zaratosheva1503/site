@@ -92,19 +92,33 @@ function shuffle(items) {
   return result;
 }
 
-function getRoomLink(code, botUsername) {
-  const base = `${PUBLIC_URL}/?join=${encodeURIComponent(code)}`;
+
+function getTelegramSafeUrl(value) {
+  const url = new URL(value);
+  url.username = '';
+  url.password = '';
+  return url.toString();
+}
+
+function getBrowserUrl(value) {
+  return value;
+}
+
+function getRoomLink(code, botUsername, safeForTelegram = false) {
+  const publicUrl = safeForTelegram ? getTelegramSafeUrl(PUBLIC_URL) : getBrowserUrl(PUBLIC_URL);
+  const base = `${publicUrl}/?join=${encodeURIComponent(code)}`;
   return botUsername ? `${base}&bot=${encodeURIComponent(botUsername)}` : base;
 }
 
 function toPublicAsset(value) {
   if (!value) return value;
-  if (/^https?:\/\//.test(value)) return value;
-  return `${PUBLIC_URL}/${String(value).replace(/^\//, '')}`;
+  if (/^https?:\/\//.test(value)) return getTelegramSafeUrl(value);
+  return getTelegramSafeUrl(`${PUBLIC_URL}/${String(value).replace(/^\//, '')}`);
 }
 
 function mainMenuKeyboard(botUsername) {
-  const webAppUrl = botUsername ? `${PUBLIC_URL}/?bot=${encodeURIComponent(botUsername)}` : PUBLIC_URL;
+  const safeUrl = getTelegramSafeUrl(PUBLIC_URL);
+  const webAppUrl = botUsername ? `${safeUrl}/?bot=${encodeURIComponent(botUsername)}` : safeUrl;
   return Markup.inlineKeyboard([
     [Markup.button.callback('🕵️ Создать комнату', 'create_room')],
     [Markup.button.webApp('🎮 Открыть игру', webAppUrl)]
@@ -116,7 +130,7 @@ function roomKeyboard(room, botUsername) {
     [Markup.button.callback('📋 Скопировать код', `copy:${room.code}`), Markup.button.callback('👥 Пригласить', `invite:${room.code}`)],
     [Markup.button.callback('🎒 Выбрать паки', `packs:${room.code}`), Markup.button.callback('⚙️ Настройки', `settings:${room.code}`)],
     [Markup.button.callback('▶️ Начать игру', `start:${room.code}`)],
-    [Markup.button.webApp('🌐 Открыть лобби', getRoomLink(room.code, botUsername))],
+    [Markup.button.url('🌐 Открыть лобби', getRoomLink(room.code, botUsername, true))],
     [Markup.button.callback('🚪 Покинуть комнату', `leave:${room.code}`)]
   ]);
 }
@@ -155,7 +169,7 @@ function packsKeyboard(room, page = 0) {
 function formatRoom(room, botUsername) {
   const players = room.players.map((id, index) => `${index + 1}. ${getPlayerName(id)}${id === room.ownerId ? ' 👑' : ''}`).join('\n');
   const packs = room.packIds.map((id) => packById.get(id)?.title).filter(Boolean).join(', ');
-  return `Код комнаты\n${room.code}\n\n🎒 Паки: ${packs}\n🎮 ${room.mode === 'online' ? 'Онлайн' : 'Офлайн'} · 🔁 ${room.rounds} круга\n👥 Игроки (${room.players.length}/8)\n${players}\n\nМинимум 3 игрока для старта. По ссылке можно зайти в лобби: ${getRoomLink(room.code, botUsername)}`;
+  return `Код комнаты\n${room.code}\n\n🎒 Паки: ${packs}\n🎮 ${room.mode === 'online' ? 'Онлайн' : 'Офлайн'} · 🔁 ${room.rounds} круга\n👥 Игроки (${room.players.length}/8)\n${players}\n\nМинимум 3 игрока для старта. По ссылке можно зайти в лобби: ${getRoomLink(room.code, botUsername, true)}`;
 }
 
 function formatSettings(room) {
@@ -373,7 +387,7 @@ function setupBot() {
     const room = requireRoom(ctx.match[1]);
     await safeAnswer(ctx);
     const telegramLink = botState.username ? `https://t.me/${botState.username}?start=${room.code}` : '';
-    await ctx.reply(`Приглашение в игру:\n${getRoomLink(room.code, botState.username)}${telegramLink ? `\n${telegramLink}` : ''}\n\nИли код: ${room.code}`);
+    await ctx.reply(`Приглашение в игру:\n${getRoomLink(room.code, botState.username, true)}${telegramLink ? `\n${telegramLink}` : ''}\n\nИли код: ${room.code}`);
   });
 
   bot.action(/^lobby:(.+)$/, async (ctx) => {
@@ -547,7 +561,7 @@ function createServer(bot) {
       const id = Number(`9${crypto.randomInt(100000, 999999)}`);
       users.set(id, { id, name });
       const room = buildRoom(id);
-      sendJson(res, { room: getApiRoom(room.code), playerId: id, link: getRoomLink(room.code, botState.username) });
+      sendJson(res, { room: getApiRoom(room.code), playerId: id, link: getRoomLink(room.code, botState.username, false) });
       return;
     }
     if (url.pathname.match(/^\/api\/rooms\/[^/]+\/join$/) && req.method === 'POST') {
