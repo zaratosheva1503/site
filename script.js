@@ -1,100 +1,136 @@
-const languageContent = {
-    en: {
-        main_title: "MATRIX — Building and Repairing Gaming Computers",
-        company_description: "We are a team of dedicated professionals specializing in high-performance gaming PCs. Our sole focus is on gaming computers, and we do not service phones or tablets.",
-        services_title: "Our Services",
-        service_1: "Custom PC Builds",
-        service_2: "Repair and Diagnostics",
-        service_3: "Software/Game Installation",
-        reviews_title: "Reviews",
-        add_review_btn: "Add a Review",
-        contact_title: "Contact Us"
-    },
-    ru: {
-        main_title: "MATRIX — Сборка и ремонт игровых компьютеров",
-        company_description: "Мы — команда преданных своему делу профессионалов, специализирующихся на высокопроизводительных игровых ПК. Наша единственная специализация — игровые компьютеры, и мы не обслуживаем телефоны или планшеты.",
-        services_title: "Наши услуги",
-        service_1: "Сборка ПК на заказ",
-        service_2: "Ремонт и диагностика",
-        service_3: "Установка программного обеспечения/игр",
-        reviews_title: "Отзывы",
-        add_review_btn: "Добавить отзыв",
-        contact_title: "Свяжитесь с нами"
-    },
-    uz: {
-        main_title: "MATRIX — O'yin kompyuterlarini qurish va ta'mirlash",
-        company_description: "Biz yuqori unumdorlikdagi o'yin kompyuterlariga ixtisoslashgan professional mutaxassislar jamoasimiz. Bizning yagona yo'nalishimiz - bu o'yin kompyuterlari va biz telefonlar yoki planshetlarga xizmat ko'rsatmaymiz.",
-        services_title: "Bizning xizmatlarimiz",
-        service_1: "Maxsus kompyuter yig'ish",
-        service_2: "Ta'mirlash va diagnostika",
-        service_3: "Dasturiy ta'minot/o'yinlarni o'rnatish",
-        reviews_title: "Sharhlar",
-        add_review_btn: "Sharh qo'shish",
-        contact_title: "Biz bilan bog'laning"
-    }
+const state = {
+    mode: 'online',
+    rounds: 2,
+    timer: 0,
+    packs: [],
+    room: null,
+    playerId: localStorage.getItem('spyPlayerId') || null,
+    name: localStorage.getItem('spyPlayerName') || `Игрок ${Math.floor(Math.random() * 900 + 100)}`
 };
 
-function switchLanguage(lang) {
-    document.querySelectorAll('[data-lang-key]').forEach(el => {
-        const key = el.getAttribute('data-lang-key');
-        if (languageContent[lang][key]) {
-            el.textContent = languageContent[lang][key];
-        }
-    });
+localStorage.setItem('spyPlayerName', state.name);
 
-    document.querySelectorAll('.language-switcher button').forEach(btn => {
-        btn.classList.remove('active');
-    });
+const packsEl = document.getElementById('packs');
+const settingsSummary = document.getElementById('settings-summary');
+const roomCard = document.getElementById('room-card');
+const roomCode = document.getElementById('room-code');
+const roomPlayers = document.getElementById('room-players');
+const roomStatus = document.getElementById('room-status');
+const joinCode = document.getElementById('join-code');
 
-    document.querySelector(`.language-switcher button[onclick="switchLanguage('${lang}')"]`).classList.add('active');
+function api(path, options = {}) {
+    return fetch(path, {
+        headers: { 'Content-Type': 'application/json' },
+        ...options,
+        body: options.body ? JSON.stringify(options.body) : undefined
+    }).then(async (response) => {
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Ошибка запроса');
+        return data;
+    });
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-    // Set default language
-    switchLanguage('en');
-
-    // Add review button functionality
-    const addReviewBtn = document.getElementById('add-review-btn');
-    addReviewBtn.addEventListener('click', () => {
-        alert('The review submission form is currently under development. Please check back later!');
+function setSegmentValue(container, value) {
+    container.querySelectorAll('button').forEach((button) => {
+        button.classList.toggle('active', button.dataset.value === String(value));
     });
+}
 
-    // Matrix background effect
-    const matrixBackground = document.getElementById('matrix-background');
-    const canvas = document.createElement('canvas');
-    matrixBackground.appendChild(canvas);
-    const ctx = canvas.getContext('2d');
+function updateSummary() {
+    settingsSummary.textContent = `${state.mode === 'online' ? 'онлайн' : 'офлайн'} · ${state.rounds} круга`;
+}
 
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+function renderPacks() {
+    packsEl.innerHTML = state.packs.map((pack) => `
+        <article class="pack-card ${pack.free ? 'free' : ''}">
+            <div class="pack-image" style="background-image:url('${pack.cover}')">
+                <span class="tag">${pack.free ? 'FREE · База' : `${pack.count} карт`}</span>
+                <div class="lock">${pack.free ? '🆓' : pack.emoji}</div>
+                <button>${pack.free ? 'Играть' : 'Открыть'}</button>
+            </div>
+            <h3>${pack.emoji} ${pack.title}</h3>
+            <p>${pack.count} карточек</p>
+        </article>
+    `).join('');
+}
 
-    const letters = '01'; // Simplified to 0s and 1s for a more digital rain effect
-    const fontSize = 14;
-    const columns = canvas.width / fontSize;
+function renderRoom(room) {
+    state.room = room;
+    roomCard.classList.remove('hidden');
+    roomCode.textContent = room.code;
+    roomPlayers.innerHTML = `<h3>Игроки (${room.players.length}/8)</h3>` + room.players.map((player) => `
+        <div class="player"><span>${player.owner ? '👑' : '🙂'} ${player.name}</span>${player.owner ? '<b>хост</b>' : ''}</div>
+    `).join('');
+    roomStatus.textContent = room.players.length >= 3 ? 'Можно начинать игру в Telegram-боте' : 'Минимум 3 игрока для старта';
+}
 
-    const drops = [];
-    for (let i = 0; i < columns; i++) {
-        drops[i] = 1;
-    }
+async function loadPacks() {
+    const { packs } = await api('/api/packs');
+    state.packs = packs;
+    renderPacks();
+}
 
-    function draw() {
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.04)';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+async function createRoom() {
+    const { room, playerId, link } = await api('/api/rooms', { method: 'POST', body: { name: state.name } });
+    state.playerId = playerId;
+    localStorage.setItem('spyPlayerId', playerId);
+    renderRoom(room);
+    history.replaceState(null, '', new URL(link).search);
+}
 
-        ctx.fillStyle = '#0f0';
-        ctx.font = `${fontSize}px monospace`;
+async function joinRoom(code) {
+    const { room, playerId } = await api(`/api/rooms/${code}/join`, {
+        method: 'POST',
+        body: { playerId: state.playerId, name: state.name }
+    });
+    state.playerId = playerId;
+    localStorage.setItem('spyPlayerId', playerId);
+    renderRoom(room);
+    history.replaceState(null, '', `?join=${room.code}${new URLSearchParams(location.search).get('bot') ? `&bot=${new URLSearchParams(location.search).get('bot')}` : ''}`);
+}
 
-        for (let i = 0; i < drops.length; i++) {
-            const text = letters[Math.floor(Math.random() * letters.length)];
-            ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+function getRoomLink() {
+    return `${location.origin}${location.pathname}?join=${state.room.code}`;
+}
 
-            if (drops[i] * fontSize > canvas.height && Math.random() > 0.985) { // Slower reset
-                drops[i] = 0;
-            }
-
-            drops[i]++;
-        }
-    }
-
-    setInterval(draw, 50); // Slower interval
+document.querySelectorAll('.segmented').forEach((container) => {
+    container.addEventListener('click', (event) => {
+        const button = event.target.closest('button');
+        if (!button) return;
+        const value = button.dataset.value;
+        if (container.dataset.setting === 'rounds') state.rounds = Number(value);
+        if (container.dataset.setting === 'timer') state.timer = Number(value);
+        if (container.dataset.setting === 'mode') state.mode = value;
+        setSegmentValue(container, value);
+        updateSummary();
+    });
 });
+
+document.getElementById('settings-toggle').addEventListener('click', () => {
+    document.getElementById('settings-card').classList.toggle('is-open');
+});
+
+document.getElementById('rules-toggle').addEventListener('click', () => {
+    const rules = document.getElementById('rules');
+    rules.classList.toggle('hidden');
+    document.getElementById('rules-toggle').textContent = rules.classList.contains('hidden') ? '📖 Показать правила' : '📖 Свернуть правила';
+});
+
+document.getElementById('create-room').addEventListener('click', createRoom);
+document.getElementById('join-room').addEventListener('click', () => joinRoom(joinCode.value.trim().toUpperCase()).catch((error) => alert(error.message)));
+document.getElementById('copy-link').addEventListener('click', () => navigator.clipboard.writeText(getRoomLink()).then(() => alert('Ссылка скопирована')));
+document.getElementById('share-link').addEventListener('click', async () => {
+    const url = getRoomLink();
+    if (navigator.share) await navigator.share({ title: 'Кто шпион', text: `Заходи в комнату ${state.room.code}`, url });
+    else await navigator.clipboard.writeText(url).then(() => alert('Ссылка скопирована'));
+});
+
+const params = new URLSearchParams(location.search);
+const join = params.get('join');
+if (join) {
+    joinCode.value = join.toUpperCase();
+    joinRoom(join.toUpperCase()).catch(() => {});
+}
+
+updateSummary();
+loadPacks();

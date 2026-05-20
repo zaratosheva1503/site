@@ -1,0 +1,10 @@
+{
+  "scripts": {
+    "start": "node server.js",
+    "build": "node --check server.js && node --check data/packs.js && node --check scripts/generate-assets.js"
+  },
+  "dependencies": {
+    "telegraf": "^4.16.3"
+  },
+  "devDependencies": {}
+}
