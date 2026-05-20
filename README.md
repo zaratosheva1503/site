@@ -17,8 +17,9 @@
 1. Установи Node.js LTS: https://nodejs.org/
 2. Открой `start.bat` двойным кликом.
 3. Введи токен Telegram-бота при первом запуске. Токен сохранится в `.env` рядом со `start.bat`.
+4. Если есть ngrok authtoken, вставь его при первом запуске; иначе просто нажми Enter и попробуй бесплатный tunnel.
 
-`start.bat` сам установит зависимости в папку проекта и запустит сервер.
+`start.bat` сам установит зависимости в папку проекта, скачает `ngrok.exe` в `tools/`, запустит публичный tunnel, подставит `PUBLIC_URL` и запустит сервер.
 
 ## Запуск вручную
 
@@ -40,5 +41,7 @@ npm start
 
 - `BOT_TOKEN` или `TELEGRAM_BOT_TOKEN` — токен Telegram-бота.
 - `PUBLIC_URL` — публичный URL сервера, нужен для ссылок лобби и Telegram WebApp.
+- `USE_NGROK=1` — включает автостарт ngrok в `start.bat`.
+- `NGROK_AUTHTOKEN` — необязательный токен ngrok для стабильного tunnel.
 - `WEBHOOK_URL` — если задан, бот использует webhook `/telegram`; без него запускается polling.
 - `PORT` — порт сервера, по умолчанию `3000`.
