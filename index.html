@@ -1,58 +1,125 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MATRIX - Gaming Computers</title>
+    <title>Кто шпион — Telegram игра</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div id="matrix-background"></div>
-    <div class="container">
-        <header>
-            <div class="logo">
-                <h1><a href="#" data-lang="en">MATRIX</a></h1>
-            </div>
-            <nav>
-                <ul class="language-switcher">
-                    <li><button onclick="switchLanguage('en')" class="active">EN</button></li>
-                    <li><button onclick="switchLanguage('ru')">RU</button></li>
-                    <li><button onclick="switchLanguage('uz')">UZ</button></li>
-                </ul>
-            </nav>
+    <div class="app-shell">
+        <header class="hero">
+            <div class="spy-emoji">🕵️‍♂️</div>
+            <h1>КТО ШПИОН</h1>
+            <p>от Базару нет</p>
         </header>
 
-        <main>
-            <section id="home">
-                <h2 data-lang-key="main_title">MATRIX — Building and Repairing Gaming Computers</h2>
-                <p data-lang-key="company_description">We are a team of dedicated professionals specializing in high-performance gaming PCs. Our sole focus is on gaming computers, and we do not service phones or tablets.</p>
-            </section>
+        <section class="free-card">
+            <span>🆓</span>
+            <div>
+                <strong>Бесплатный режим</strong>
+                <p>Тебе открыт пак «База» — 10 карточек. Можешь играть прямо сейчас!</p>
+            </div>
+        </section>
 
-            <section id="services">
-                <h3 data-lang-key="services_title">Our Services</h3>
-                <ul>
-                    <li data-lang-key="service_1">Custom PC Builds</li>
-                    <li data-lang-key="service_2">Repair and Diagnostics</li>
-                    <li data-lang_key="service_3">Software/Game Installation</li>
-                </ul>
-            </section>
+        <section class="panel premium-panel">
+            <div class="panel-icon">👑</div>
+            <div>
+                <small>Базару нет</small>
+                <strong>🔓 Открыть все паки</strong>
+            </div>
+            <span>›</span>
+        </section>
 
-            <section id="reviews">
-                <h3 data-lang-key="reviews_title">Reviews</h3>
-                <div class="review-list">
-                    <!-- Reviews will be added here dynamically -->
+        <section class="panel settings-panel" id="settings-toggle">
+            <div class="panel-icon">⚙️</div>
+            <div>
+                <small>Настройки игры</small>
+                <strong id="settings-summary">онлайн · 2 круга</strong>
+            </div>
+            <span>⌄</span>
+        </section>
+
+        <section class="settings-card is-open" id="settings-card">
+            <label>🏴 Режим</label>
+            <div class="segmented" data-setting="mode">
+                <button class="active" data-value="online">🕹 Онлайн</button>
+                <button data-value="offline">🤝 Офлайн</button>
+            </div>
+
+            <label>🔁 Круги ассоциаций</label>
+            <div class="segmented four" data-setting="rounds">
+                <button data-value="1">1</button>
+                <button class="active" data-value="2">2</button>
+                <button data-value="3">3</button>
+                <button data-value="4">🎲</button>
+            </div>
+
+            <label>⏱ Давление времени</label>
+            <small>Секунд на каждый ход. Не успел — пропуск.</small>
+            <div class="segmented five" data-setting="timer">
+                <button class="active" data-value="0">Выкл</button>
+                <button data-value="15">15с</button>
+                <button data-value="30">30с</button>
+                <button data-value="45">45с</button>
+                <button data-value="60">60с</button>
+            </div>
+
+            <div class="switch-row">
+                <div><strong>💡 Подсказка для шпиона</strong><small>Шпион видит 4 варианта вместо всех карт пака</small></div>
+                <input type="checkbox" aria-label="Подсказка для шпиона">
+            </div>
+            <div class="switch-row">
+                <div><strong>🚫 Запретить «я угадал»</strong><small>Шпион не сможет угадывать, только голосование</small></div>
+                <input type="checkbox" aria-label="Запретить я угадал">
+            </div>
+            <div class="switch-row">
+                <div><strong>📳 Вибрация телефона</strong><small>Личная — жужжит на твой ход / голосование / результат</small></div>
+                <input type="checkbox" aria-label="Вибрация телефона">
+            </div>
+        </section>
+
+        <section class="actions">
+            <button class="primary" id="create-room">🎮 Создать комнату</button>
+            <div class="join-box">
+                <small>Или присоединиться по коду</small>
+                <div>
+                    <input id="join-code" placeholder="ABC123" maxlength="6">
+                    <button id="join-room">→</button>
                 </div>
-                <button id="add-review-btn" data-lang-key="add_review_btn">Add a Review</button>
-            </section>
-        </main>
+                <small>От 3 до 8 игроков</small>
+            </div>
+        </section>
 
-        <footer>
-            <h3 data-lang-key="contact_title">Contact Us</h3>
-            <p>+998912445888</p>
-            <p>+998982745888</p>
-        </footer>
+        <section class="room-card hidden" id="room-card">
+            <small>Код комнаты</small>
+            <h2 id="room-code">ABC123</h2>
+            <div class="room-actions">
+                <button id="copy-link">📋 Скопировать</button>
+                <button id="share-link">👥 Пригласить</button>
+            </div>
+            <div id="room-players"></div>
+            <p id="room-status">Минимум 3 игрока для старта</p>
+        </section>
+
+        <button class="rules-toggle" id="rules-toggle">📖 Свернуть правила</button>
+        <section class="rules" id="rules">
+            <p>🎯 <strong>Цель:</strong> мирные вычисляют шпиона, шпион пытается понять локацию.</p>
+            <p>👥 <strong>Игроков:</strong> 3–8 человек.</p>
+            <strong>Как идёт игра:</strong>
+            <ol>
+                <li>Создаёшь комнату — выбираешь онлайн/офлайн, тему, число кругов.</li>
+                <li>Стартует раунд: каждому показывается роль.</li>
+                <li>По очереди каждый говорит одну ассоциацию.</li>
+                <li>Через N кругов хост открывает голосование.</li>
+                <li>Большинство голосов — кто шпион. Если ничья — хост переголосовывает или ещё круг.</li>
+                <li>Шпион в любой момент может попробовать угадать тему.</li>
+            </ol>
+        </section>
+
+        <button class="packs-toggle" id="packs-toggle">📦 Паки</button>
+        <section class="packs hidden" id="packs"></section>
     </div>
-
     <script src="script.js"></script>
 </body>
 </html>
