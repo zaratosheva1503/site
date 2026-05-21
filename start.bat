@@ -75,7 +75,7 @@ if /I "%USE_NGROK%"=="1" (
   echo Starting ngrok tunnel for port %PORT%...
   taskkill /IM ngrok.exe /F >nul 2>nul
   del ngrok.log >nul 2>nul
-  start "ngrok tunnel" /min tools\ngrok.exe http %PORT% --log=stdout --log-level=info ^> ngrok.log
+  start "ngrok tunnel" /min tools\ngrok.exe http %PORT% --log ngrok.log
   timeout /t 6 /nobreak >nul
 
   for /f "usebackq delims=" %%U in (`powershell -NoProfile -ExecutionPolicy Bypass -Command "for($i=0;$i -lt 20;$i++){ try { $t=(Invoke-RestMethod 'http://127.0.0.1:4040/api/tunnels').tunnels | Where-Object { $_.proto -eq 'https' } | Select-Object -First 1; if($t.public_url){ $t.public_url; exit 0 } } catch {}; Start-Sleep -Seconds 1 }; exit 1"`) do set "PUBLIC_URL=%%U"
