@@ -116,6 +116,14 @@ document.getElementById('rules-toggle').addEventListener('click', () => {
     document.getElementById('rules-toggle').textContent = rules.classList.contains('hidden') ? '📖 Показать правила' : '📖 Свернуть правила';
 });
 
+document.getElementById('packs-toggle').addEventListener('click', () => {
+    const packs = document.getElementById('packs');
+    const btn = document.getElementById('packs-toggle');
+    packs.classList.toggle('hidden');
+    btn.classList.toggle('open', !packs.classList.contains('hidden'));
+    btn.textContent = packs.classList.contains('hidden') ? '📦 Паки' : '📦 Свернуть паки';
+});
+
 document.getElementById('create-room').addEventListener('click', createRoom);
 document.getElementById('join-room').addEventListener('click', () => joinRoom(joinCode.value.trim().toUpperCase()).catch((error) => alert(error.message)));
 document.getElementById('copy-link').addEventListener('click', () => navigator.clipboard.writeText(getRoomLink()).then(() => alert('Ссылка скопирована')));

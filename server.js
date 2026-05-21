@@ -112,8 +112,14 @@ function getRoomLink(code, botUsername, safeForTelegram = false) {
 
 function toPublicAsset(value) {
   if (!value) return value;
-  if (/^https?:\/\//.test(value)) return getTelegramSafeUrl(value);
-  return getTelegramSafeUrl(`${PUBLIC_URL}/${String(value).replace(/^\//, '')}`);
+  if (/^https?:\/\//.test(value)) {
+    try { return getTelegramSafeUrl(value); } catch { return value; }
+  }
+  try {
+    return getTelegramSafeUrl(`${PUBLIC_URL}/${String(value).replace(/^\//, '')}`);
+  } catch {
+    return `${PUBLIC_URL}/${String(value).replace(/^\//, '')}`;
+  }
 }
 
 function mainMenuKeyboard(botUsername) {
@@ -550,7 +556,13 @@ function getApiRoom(code) {
 function createServer(bot) {
   const publicDir = __dirname;
   return http.createServer(async (req, res) => {
-    const url = new URL(req.url, PUBLIC_URL);
+    let url;
+    try {
+      url = new URL(req.url, PUBLIC_URL);
+    } catch {
+      const cleaned = req.url.replace(/^\/\//, '/');
+      url = new URL(cleaned, PUBLIC_URL);
+    }
     if (url.pathname === '/api/packs') {
       sendJson(res, { packs: PACKS.map((pack) => ({ id: pack.id, title: pack.title, emoji: pack.emoji, cover: toPublicAsset(pack.cover), count: pack.cards.length, free: Boolean(pack.free) })) });
       return;
