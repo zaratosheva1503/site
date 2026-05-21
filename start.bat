@@ -1,5 +1,5 @@
 @echo off
-setlocal EnableExtensions
+setlocal EnableExtensions EnableDelayedExpansion
 cd /d "%~dp0"
 
 echo ========================================
@@ -35,17 +35,17 @@ if not exist node_modules (
 if not exist .env (
   echo First run: creating .env next to start.bat.
   set /p BOT_TOKEN_INPUT=Paste BOT_TOKEN from BotFather: 
-  if "%BOT_TOKEN_INPUT%"=="" (
+  if "!BOT_TOKEN_INPUT!"=="" (
     echo BOT_TOKEN is required for the Telegram bot.
     pause
     exit /b 1
   )
-  > .env echo BOT_TOKEN=%BOT_TOKEN_INPUT%
+  > .env echo BOT_TOKEN=!BOT_TOKEN_INPUT!
   >> .env echo PORT=3000
   >> .env echo USE_NGROK=1
   echo.
   set /p NGROK_TOKEN_INPUT=Paste ngrok authtoken or press Enter to skip: 
-  if not "%NGROK_TOKEN_INPUT%"=="" >> .env echo NGROK_AUTHTOKEN=%NGROK_TOKEN_INPUT%
+  if not "!NGROK_TOKEN_INPUT!"=="" >> .env echo NGROK_AUTHTOKEN=!NGROK_TOKEN_INPUT!
   echo .env file created.
 )
 
