@@ -74,23 +74,26 @@ if /I "%USE_NGROK%"=="1" (
 
   echo Starting ngrok tunnel for port %PORT%...
   taskkill /IM ngrok.exe /F >nul 2>nul
-  start "ngrok tunnel" /min tools\ngrok.exe http %PORT%
-  timeout /t 4 /nobreak >nul
+  del ngrok.log >nul 2>nul
+  start "ngrok tunnel" /min tools\ngrok.exe http %PORT% --log=stdout --log-level=info ^> ngrok.log
+  timeout /t 6 /nobreak >nul
 
   for /f "usebackq delims=" %%U in (`powershell -NoProfile -ExecutionPolicy Bypass -Command "for($i=0;$i -lt 20;$i++){ try { $t=(Invoke-RestMethod 'http://127.0.0.1:4040/api/tunnels').tunnels | Where-Object { $_.proto -eq 'https' } | Select-Object -First 1; if($t.public_url){ $t.public_url; exit 0 } } catch {}; Start-Sleep -Seconds 1 }; exit 1"`) do set "PUBLIC_URL=%%U"
 
-  if "%PUBLIC_URL%"=="" (
+  if "!PUBLIC_URL!"=="" (
     echo ngrok did not return a public URL.
-    echo If ngrok requires an account, add NGROK_AUTHTOKEN to .env and run again.
+    echo Last ngrok log lines:
+    powershell -NoProfile -ExecutionPolicy Bypass -Command "if(Test-Path ngrok.log){ Get-Content ngrok.log -Tail 30 }"
+    echo If ngrok requires an account, check NGROK_AUTHTOKEN in .env and run again.
     pause
     exit /b 1
   )
 ) else (
-  if "%PUBLIC_URL%"=="" set "PUBLIC_URL=http://localhost:%PORT%"
+  if "!PUBLIC_URL!"=="" set "PUBLIC_URL=http://localhost:%PORT%"
 )
 
 echo.
-echo PUBLIC_URL=%PUBLIC_URL%
+echo PUBLIC_URL=!PUBLIC_URL!
 echo Local server: http://localhost:%PORT%
 echo Press Ctrl+C to stop. You can close the ngrok window separately.
 echo.
